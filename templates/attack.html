@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciphership</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Ciphership</h1>
+    <div class="render-area">
+        <div class="play-title">
+            <h2 id="score"></h2>
+            <h2>Choose which ship to attack</h2>
+            <h2 id="cipher"></h2>
+        </div>
+        <div class="play-area">
+            <div>
+                <div id="user-grid" class="grid"></div>
+                <div><h3>Your Fleet</h3></div>
+            </div>
+            <div>
+                <div id="opponent-grid" class="grid"></div>
+                <div><h3>Opponent Fleet</h3></div>
+            </div>
+            <div id="chat-container" class="hidden">
+                <h2>Public Chat</h2>
+                <div id="messages"></div>
+            </div>
+        </div>
+    </div>
+    <button id="submit-attack">Attack!</button>
+    <p id = info></p>
+    <script>
+        let GRID_SIZE = 6
+        let UUID = window.location.href.split('/').pop()
+        let wowstring = "abcde "   
+        function createGrid(gridElement, isClickable) {
+            gridElement.style.display = "grid";
+            gridElement.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 75px)`;
+            gridElement.style.gridTemplateRows = `repeat(${GRID_SIZE}, 75px)`;
+
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const cell = document.createElement("div");
+                    cell.className = "cell";
+                    cell.dataset.x = i;
+                    cell.dataset.y = j;
+
+                    // Allow user to toggle ship placement
+                    if (isClickable && i!=(GRID_SIZE-1) && j!=(GRID_SIZE-1)) {
+                        cell.addEventListener("click", () => {
+                            document.querySelectorAll(".selected").forEach((selectedCell) => {
+                                selectedCell.classList.remove("selected");
+                            });
+                            cell.classList.toggle("selected"); // Toggle ship color
+                        });
+                    }
+                    else if(i==(GRID_SIZE-1))
+                    {
+                        cell.innerText = wowstring[j];
+                    }
+                    else if(j==(GRID_SIZE-1))
+                    {
+                        cell.innerText = wowstring[i];
+                    }
+
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+    
+        async function fetchMessages() {
+            try {
+                const response = await fetch('/get-all-messages');
+                if (!response.ok) throw new Error('Failed to fetch messages');
+                const data = await response.json();
+                const messagesContainer = document.getElementById('messages');
+                if(data.length == messagesContainer.childElementCount) {
+                    return;
+                }
+                messagesContainer.innerHTML = ''; // Clear old messages
+                
+                data.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = 'message';
+                    div.innerHTML = `<span class="username">${msg.username}:</span> <span class="text">${msg.text}</span>`;
+                    messagesContainer.appendChild(div);
+                });
+
+                // Auto-scroll to the bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/get-tables/' + UUID);
+                if (!response.ok) throw new Error('Failed to fetch messages');
+                data = await response.json();
+                console.log(data)
+                const user_grid = document.getElementById("user-grid")
+                const opponent_grid = document.getElementById("opponent-grid")
+                data.table_data[0].forEach(msg => {
+                     updateCell(user_grid, msg.x, msg.y, msg.color)
+                });
+                data.table_data[1].forEach(msg => {
+                     updateCell(opponent_grid, msg.x, msg.y, msg.color)
+                });
+                document.getElementById("score").innerHTML = `Score: ${data.score}`
+                document.getElementById("cipher").innerHTML = `Encryption(abcde) : ${data.cipher}`
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+            }
+        }
+
+        function updateCell(gridElement, x, y, className) {
+            const cell = gridElement.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+            if (cell) {
+                cell.classList.add(className); // Add a class to update the cell
+                if(className == "attacked")
+                {
+                    cell.style.pointerEvents = "none";
+                }
+            } else {
+                console.error(`Cell at (${x}, ${y}) not found.`);
+            }
+        }
+        
+        // Instantiation
+        const user_grid = document.getElementById("user-grid");
+        const opponent_grid = document.getElementById("opponent-grid");
+        createGrid(user_grid, false);
+        createGrid(opponent_grid, true);
+        document.getElementById("chat-container").classList.remove("hidden");
+        setInterval(fetchMessages, 100);
+        fetchData()
+        
+        document.getElementById("submit-attack").addEventListener("click", () => {
+            document.getElementById("submit-attack").disabled = true
+            const selectedCells = [];
+            document.querySelectorAll(".cell.selected").forEach((cell) => {
+                selectedCells.push({
+                    x: parseInt(cell.dataset.x),
+                    y: parseInt(cell.dataset.y),
+                });
+            });
+
+            if (selectedCells.length != 1) {
+                document.getElementById('info').innerText = "You can launch only one attack!!!"
+                return;
+            }
+
+            // Send the ship layout to the server
+            fetch("/submit-attack", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ attack: selectedCells, uuid: UUID }),
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Failed to submit ship layout");
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    document.getElementById('info').innerText = "Attack launched successfully!"
+                    console.log("Server response:", data);
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    document.getElementById('info').innerText = "An error occurred while submitting your attack."
+                    console.error("Error:", error);
+                });
+        });
+    </script>
+</body>
+</html>

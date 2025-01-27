@@ -1,0 +1,167 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f0f8ff;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #333;
+}
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+#chat-container {
+    max-width: 400px;
+    min-width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+#messages {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background: #fff;
+}
+.message {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+.message:last-child {
+    border-bottom: none;
+}
+.username {
+    font-weight: bold;
+    color: #333;
+}
+.text {
+    color: #555;
+}
+
+/* Initially hide the opponent grid */
+.hidden {
+    display: none;
+}
+
+.render-area {
+    margin: 25px;
+}
+
+.play-area {
+    display: flex;
+    justify-content: space-between
+}
+.play-title {
+    display: flex;
+    justify-content: space-between;
+}
+#score {
+    width: 25%;
+    text-align: left;
+}
+#cipher {
+    width: 25%;
+    text-align: right;
+}
+/* Style for the grid itself */
+.grid {
+    display: grid;
+    gap: 7px; /* Space between cells */
+    grid-template-columns: repeat(5, 75px); /* 5 columns with 50px width */
+    grid-template-rows: repeat(5, 75px); /* 5 rows with 50px height */
+    justify-content: center;
+    margin: 15px auto;
+}
+
+/* Style for each cell */
+.cell {
+    width: 75px;
+    height: 75px;
+    background-color: #f0f0f0; /* Light gray */
+    border: 1px solid #ccc; /* Border */
+    box-sizing: border-box;
+    text-align: center;
+    font-size:xx-large;
+    padding-top:23%;
+}
+
+/* Style for cells that contain ships */
+.cell.ship {
+    background-color: #4CAF50; /* Green for ship cells */
+}
+
+.cell.attacked {
+    background-color: #EE1100;
+}
+
+.cell.defended {
+    background-color: #0055ff;
+}
+
+.cell.attacking {
+    background-color: #ff8800;
+}
+
+.cell.defending {
+    background-color: #00ffff;
+}
+
+.cell.selected {
+    background-color: #aa00aa;
+}
+
+button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* #message {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #333;
+} */
+
+
+
+table {
+    width: 80%;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+th {
+    background-color: #f4f4f4;
+}
+.cipher-box {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    font-size: 18px;
+    margin-right: 5px;
+}
+.cipher-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}

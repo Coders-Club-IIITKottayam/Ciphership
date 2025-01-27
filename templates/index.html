@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciphership</title>
+    <link rel="stylesheet" href="/static/style.css">     
+</head>
+<body>
+    <h1>Ciphership</h1>
+    <h2>Enter your Team Name</h2>
+    <input type="text" id="teamName" placeholder="Team Name">
+    <h2>Enter your cipher string</h2>
+    <div class="cipher-container">
+        <input type="text" id="box1" class="cipher-box" maxlength="1" oninput="focusNext(this, 'box2')" placeholder="a">
+        <input type="text" id="box2" class="cipher-box" maxlength="1" oninput="focusNext(this, 'box3')" placeholder="b">
+        <input type="text" id="box3" class="cipher-box" maxlength="1" oninput="focusNext(this, 'box4')" placeholder="c">
+        <input type="text" id="box4" class="cipher-box" maxlength="1" oninput="focusNext(this, 'box5')" placeholder="d">
+        <input type="text" id="box5" class="cipher-box" maxlength="1" placeholder="e">
+    </div>
+    <button id="submit-info">Submit Team Info</button>
+    <p id="info"></p>
+    <script>
+        function focusNext(current, nextId) {
+            if (current.value.length === 1) {
+                document.getElementById(nextId)?.focus();
+            }
+        }
+        function sendCipher() {
+            let cipher = '';
+            for (let i = 1; i <= 5; i++) {
+                const value = document.getElementById(`box${i}`).value;
+                if (!value) {
+                    alert('Please fill all boxes.');
+                    return;
+                }
+                cipher += value;
+            }
+            return cipher
+        }
+        document.getElementById("submit-info").addEventListener("click", async () => {
+            const teamname = document.getElementById("teamName").value; // Get team name
+            const cipher = sendCipher()
+            
+            const ourstring = "abcde";
+
+            const userstring = cipher.split('').sort().join('');
+            
+            if (cipher.length != 5 || userstring != ourstring) {
+                document.getElementById("info").innerText = "Enter a valid cipher, e.g., aecbd or abedc";
+                return;
+            }
+
+            document.getElementById("info").innerText = "Valid cipher!";
+
+
+            const data = {
+                teamName: teamname,
+                cipher: cipher
+            };
+
+            try {
+                // Send data to server using fetch API
+                const response = await fetch('/submit-team-info', { // Replace with your server endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Server Response:', result);
+                    window.location.href = '/play/' + result.teamUUID
+                } else {
+                    console.error('Failed to submit team info:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

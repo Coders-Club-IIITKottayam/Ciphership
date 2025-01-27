@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciphership</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Ciphership</h1>
+    <h2>Place Your 10 Ships</h2>
+    <div id="user-grid" class="grid"></div>
+    <button id="submit-layout">Submit Ship Layout</button>
+    <p id="info"></p>
+    <script>
+        let GRID_SIZE = 6
+        let UUID = window.location.href.split('/').pop()
+        let wowstring = "abcde "   
+        function createGrid(gridElement, isClickable) {
+            gridElement.style.display = "grid";
+            gridElement.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 75px)`;
+            gridElement.style.gridTemplateRows = `repeat(${GRID_SIZE}, 75px)`;
+
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const cell = document.createElement("div");
+                    cell.className = "cell";
+                    cell.dataset.x = i;
+                    cell.dataset.y = j;
+
+                    // Allow user to toggle ship placement
+                    if (isClickable && i!=(GRID_SIZE-1) && j!=(GRID_SIZE-1)) {
+                        cell.addEventListener("click", () => {
+                            cell.classList.toggle("ship"); // Toggle ship color
+                        });
+                    }
+                    else if(i==(GRID_SIZE-1))
+                    {
+                        cell.innerText = wowstring[j];
+                    }
+                    else if(j==(GRID_SIZE-1))
+                    {
+                        cell.innerText = wowstring[i];
+                    }
+
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+        const SHIP_COUNT = 10
+        const userGrid = document.getElementById("user-grid");
+        createGrid(userGrid, true);
+
+        document.getElementById("submit-layout").addEventListener("click", () => {
+            const selectedCells = [];
+            document.querySelectorAll(".cell.ship").forEach((cell) => {
+                selectedCells.push({
+                    x: parseInt(cell.dataset.x),
+                    y: parseInt(cell.dataset.y),
+                });
+            });
+
+            if (selectedCells.length != SHIP_COUNT) {
+                document.getElementById("info").innerText = `Ship count must be exactly ${SHIP_COUNT}`
+                return;
+            }
+
+            // Send the ship layout to the server
+            fetch("/submit-ships", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ ships: selectedCells, uuid: UUID}),
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Failed to submit ship layout");
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    console.log("Server response:", data);
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                });
+        });
+    </script>
+</body>
+</html>
